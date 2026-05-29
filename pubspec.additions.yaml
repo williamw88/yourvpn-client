@@ -1,0 +1,51 @@
+# pubspec.additions.yaml
+#
+# Extra dependencies to MERGE into the existing Hiddify pubspec.yaml.
+# DO NOT replace the existing pubspec.yaml — add these entries under the
+# `dependencies:` section of hiddify-app/pubspec.yaml.
+#
+# flutter_riverpod is already present in Hiddify — do not add it again.
+# Verify the exact version Hiddify pins before adding any of these, and
+# prefer the same major version to avoid solver conflicts.
+
+dependencies:
+  # HTTP client used by ApiClient (lib/src/api/api_client.dart)
+  http: ^1.2.1
+
+  # Secure token storage backed by Android Keystore / iOS Keychain
+  # Required by TokenStore (lib/src/auth/token_store.dart)
+  flutter_secure_storage: ^9.2.2
+
+  # Opens checkout URLs in the system browser
+  # Required by PlansScreen (lib/src/ui/plans_screen.dart)
+  url_launcher: ^6.3.0
+
+# ---------------------------------------------------------------------------
+# Platform configuration notes
+# ---------------------------------------------------------------------------
+#
+# flutter_secure_storage — Android
+#   In android/app/build.gradle ensure minSdkVersion >= 18.
+#   In android/app/src/main/AndroidManifest.xml add (inside <application>):
+#     android:networkSecurityConfig="@xml/network_security_config"
+#   if you need cleartext traffic for dev; remove for production.
+#
+# url_launcher — Android
+#   In android/app/src/main/AndroidManifest.xml add inside <queries>:
+#     <intent>
+#       <action android:name="android.intent.action.VIEW" />
+#       <data android:scheme="https" />
+#     </intent>
+#
+# url_launcher — iOS
+#   In ios/Runner/Info.plist add:
+#     <key>LSApplicationQueriesSchemes</key>
+#     <array>
+#       <string>https</string>
+#       <string>http</string>
+#     </array>
+#
+# url_launcher — macOS
+#   In macos/Runner/DebugProfile.entitlements and Release.entitlements add:
+#     <key>com.apple.security.network.client</key>
+#     <true/>
