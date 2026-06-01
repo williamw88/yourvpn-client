@@ -6,3 +6,11 @@ build/
 *.iml
 .idea/
 .DS_Store
+
+# IDE workspace files
+*.bundle
+.vscode/
+.sentry-native/
+
+# OS files
+Thumbs.db
