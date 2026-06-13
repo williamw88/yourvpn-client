@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/features/home/widget/connection_button.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_delay_indicator.dart';
@@ -8,7 +9,6 @@ import 'package:hiddify/features/yourvpn/ui/account_screen.dart';
 import 'package:hiddify/features/yourvpn/ui/node_provider.dart';
 import 'package:hiddify/features/yourvpn/ui/server_picker_sheet.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class HomeDashboard extends ConsumerWidget {
   const HomeDashboard({super.key});
@@ -92,58 +92,66 @@ class _AccountCard extends StatelessWidget {
             '${user.expiryDate.month.toString().padLeft(2, '0')}-'
             '${user.expiryDate.day.toString().padLeft(2, '0')}';
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Material(
         color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Plan name + expiry row
-          Row(
-            children: [
-              Icon(Icons.workspace_premium_rounded, size: 18, color: cs.primary),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  _hasNoPlan ? t.yourvpn.home.noActivePlan : user.planName,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              if (!_hasNoPlan)
-                Text(t.yourvpn.home.expiry(date: expiryStr), style: theme.textTheme.bodySmall?.copyWith(color: cs.outline)),
-            ],
-          ),
-          if (_hasNoPlan) ...[
-            const SizedBox(height: 10),
-            _BuyPlanButton(t: t),
-          ] else ...[
-            const SizedBox(height: 10),
-            // Usage bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: fraction,
-                minHeight: 8,
-                backgroundColor: cs.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  fraction > 0.9 ? cs.error : cs.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.pushNamed('plans'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(t.yourvpn.home.used(value: usedLabel), style: theme.textTheme.bodySmall),
-                Text(t.yourvpn.home.total(value: totalLabel), style: theme.textTheme.bodySmall),
+                // Plan name + expiry row
+                Row(
+                  children: [
+                    Icon(Icons.workspace_premium_rounded, size: 18, color: cs.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _hasNoPlan ? t.yourvpn.home.noActivePlan : user.planName,
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    if (!_hasNoPlan)
+                      Text(t.yourvpn.home.expiry(date: expiryStr), style: theme.textTheme.bodySmall?.copyWith(color: cs.outline)),
+                    const SizedBox(width: 4),
+                    Icon(Icons.chevron_right_rounded, size: 18, color: cs.outline),
+                  ],
+                ),
+                if (_hasNoPlan) ...[
+                  const SizedBox(height: 10),
+                  _BuyPlanButton(t: t),
+                ] else ...[
+                  const SizedBox(height: 10),
+                  // Usage bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: fraction,
+                      minHeight: 8,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        fraction > 0.9 ? cs.error : cs.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(t.yourvpn.home.used(value: usedLabel), style: theme.textTheme.bodySmall),
+                      Text(t.yourvpn.home.total(value: totalLabel), style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ],
               ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -160,10 +168,7 @@ class _BuyPlanButton extends StatelessWidget {
       child: FilledButton.icon(
         icon: const Icon(Icons.shopping_cart_rounded, size: 18),
         label: Text(t.yourvpn.home.getPlan),
-        onPressed: () => launchUrl(
-          Uri.parse('https://ziyoucloud.com/#/plan'),
-          mode: LaunchMode.externalApplication,
-        ),
+        onPressed: () => context.pushNamed('plans'),
       ),
     );
   }

@@ -11,6 +11,7 @@ import 'package:hiddify/features/about/widget/about_page.dart';
 import 'package:hiddify/features/yourvpn/auth/auth_controller.dart';
 import 'package:hiddify/features/yourvpn/ui/account_screen.dart';
 import 'package:hiddify/features/yourvpn/ui/login_screen.dart';
+import 'package:hiddify/features/yourvpn/ui/plans_screen.dart';
 import 'package:hiddify/features/home/widget/home_page.dart';
 import 'package:hiddify/features/intro/widget/intro_page.dart';
 import 'package:hiddify/features/log/overview/logs_page.dart';
@@ -131,6 +132,12 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                       path: 'proxies',
                       pageBuilder: (_, state) =>
                           customTransition(TransitionType.fade, state.pageKey, const ProxiesOverviewPage()),
+                    ),
+                    GoRoute(
+                      name: 'plans',
+                      path: 'plans',
+                      pageBuilder: (_, state) =>
+                          customTransition(TransitionType.slide, state.pageKey, const PlansScreen()),
                     ),
                     if (isMobileBreakpoint)
                       GoRoute(
