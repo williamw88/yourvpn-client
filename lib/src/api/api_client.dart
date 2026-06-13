@@ -51,15 +51,27 @@ class ApiClient {
 
   Map<String, dynamic> _decode(http.Response response) {
     final body = utf8.decode(response.bodyBytes);
+    Map<String, dynamic> json;
+    try {
+      json = jsonDecode(body) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException(response.statusCode, 'Invalid JSON response');
+    }
+
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      String msg = 'Request failed';
-      try {
-        final j = jsonDecode(body) as Map<String, dynamic>;
-        msg = (j['message'] ?? j['error'] ?? msg).toString();
-      } catch (_) {}
+      final msg = (json['msg'] ?? json['message'] ?? json['error'] ?? 'Request failed')
+          .toString();
       throw ApiException(response.statusCode, msg);
     }
-    return jsonDecode(body) as Map<String, dynamic>;
+
+    if (json.containsKey('ret') && json['ret'] != 1) {
+      throw ApiException(
+        response.statusCode,
+        (json['msg'] ?? 'Request failed').toString(),
+      );
+    }
+
+    return json;
   }
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
@@ -74,11 +86,9 @@ class ApiClient {
     final response = await _http.post(
       _uri('/api/v1/login'),
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': email, 'passwd': password}),
     );
-    final json = _decode(response);
-    // Backend returns { "token": "...", "expires": "<ISO8601>" }
-    return AuthToken.fromJson(json);
+    return AuthToken.fromJson(_decode(response));
   }
 
   // ---------------------------------------------------------------------------
@@ -92,7 +102,9 @@ class ApiClient {
       _uri('/api/v1/user'),
       headers: await _authHeaders(),
     );
-    return UserAccount.fromJson(_decode(response));
+    final json = _decode(response);
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+    return UserAccount.fromJson(data);
   }
 
   // ---------------------------------------------------------------------------
@@ -107,7 +119,7 @@ class ApiClient {
       headers: await _authHeaders(),
     );
     final json = _decode(response);
-    final list = json['data'] as List<dynamic>? ?? (json is List ? json : [json]);
+    final list = json['data'] as List<dynamic>? ?? [];
     return list.map((e) => Plan.fromJson(e as Map<String, dynamic>)).toList();
   }
 
@@ -121,7 +133,7 @@ class ApiClient {
     final response = await _http.post(
       _uri('/api/v1/order'),
       headers: await _authHeaders(),
-      body: jsonEncode({'plan_id': planId}),
+      body: jsonEncode({'product_id': planId}),
     );
     return Order.fromJson(_decode(response));
   }
@@ -138,7 +150,15 @@ class ApiClient {
       headers: await _authHeaders(),
     );
     final json = _decode(response);
-    final list = json['data'] as List<dynamic>? ?? (json is List ? json : [json]);
+    final data = json['data'];
+    final List<dynamic> list;
+    if (data is Map<String, dynamic>) {
+      list = data['nodes'] as List<dynamic>? ?? [];
+    } else if (data is List) {
+      list = data;
+    } else {
+      list = [];
+    }
     return list.map((e) => VpnNode.fromJson(e as Map<String, dynamic>)).toList();
   }
 

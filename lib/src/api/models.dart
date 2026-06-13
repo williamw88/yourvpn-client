@@ -11,9 +11,19 @@ class AuthToken {
   const AuthToken({required this.token, required this.expires});
 
   factory AuthToken.fromJson(Map<String, dynamic> json) {
+    final expiresRaw = json['expires_at'] ?? json['expires'];
+    DateTime expires;
+    if (expiresRaw is int) {
+      expires = DateTime.fromMillisecondsSinceEpoch(expiresRaw * 1000, isUtc: true);
+    } else if (expiresRaw is String) {
+      expires = DateTime.tryParse(expiresRaw) ??
+          DateTime.now().add(const Duration(days: 7));
+    } else {
+      expires = DateTime.now().add(const Duration(days: 7));
+    }
     return AuthToken(
       token: json['token'] as String,
-      expires: DateTime.parse(json['expires'] as String),
+      expires: expires,
     );
   }
 
@@ -25,30 +35,21 @@ class AuthToken {
 
 /// Authenticated user's account details from GET /api/v1/user.
 class UserAccount {
-  /// Username / display name.
-  final String u;
-
-  /// Download bytes used (may be same as [usedBytes] depending on backend).
-  final int d;
-
-  /// Total traffic quota in bytes.
+  final String displayName;
+  final String email;
+  final int uploadBytes;
+  final int downloadBytes;
   final int transferEnable;
-
-  /// Bytes consumed so far.
   final int usedBytes;
-
-  /// Subscription tier / class level.
   final int subscriptionClass;
-
-  /// Subscription expiry as Unix timestamp (seconds).
   final int expireIn;
-
-  /// Human-readable plan name.
   final String planName;
 
   const UserAccount({
-    required this.u,
-    required this.d,
+    required this.displayName,
+    required this.email,
+    required this.uploadBytes,
+    required this.downloadBytes,
     required this.transferEnable,
     required this.usedBytes,
     required this.subscriptionClass,
@@ -57,13 +58,32 @@ class UserAccount {
   });
 
   factory UserAccount.fromJson(Map<String, dynamic> json) {
+    int parseExpireIn() {
+      final raw = json['expire_in'];
+      if (raw is int) return raw;
+      if (raw is String) {
+        final dt = DateTime.tryParse(raw);
+        if (dt != null) return dt.millisecondsSinceEpoch ~/ 1000;
+      }
+      final classExpire = json['class_expire'];
+      if (classExpire is String) {
+        final dt = DateTime.tryParse(classExpire);
+        if (dt != null) return dt.millisecondsSinceEpoch ~/ 1000;
+      }
+      return 0;
+    }
+
     return UserAccount(
-      u: json['u'] as String? ?? '',
-      d: (json['d'] as num?)?.toInt() ?? 0,
+      displayName: json['user_name'] as String? ??
+          json['email'] as String? ??
+          '',
+      email: json['email'] as String? ?? '',
+      uploadBytes: (json['u'] as num?)?.toInt() ?? 0,
+      downloadBytes: (json['d'] as num?)?.toInt() ?? 0,
       transferEnable: (json['transfer_enable'] as num?)?.toInt() ?? 0,
       usedBytes: (json['used_bytes'] as num?)?.toInt() ?? 0,
       subscriptionClass: (json['class'] as num?)?.toInt() ?? 0,
-      expireIn: (json['expire_in'] as num?)?.toInt() ?? 0,
+      expireIn: parseExpireIn(),
       planName: json['plan_name'] as String? ?? '',
     );
   }
@@ -210,6 +230,17 @@ class VpnNode {
   factory VpnNode.fromJson(Map<String, dynamic> json) {
     final id = (json['id'] as num).toInt();
     final name = json['name'] as String? ?? 'Node $id';
+    String? transportType;
+    String? wsPath;
+    String? grpcServiceName;
+    final transportRaw = json['transport'];
+    if (transportRaw is String) {
+      transportType = transportRaw;
+    } else if (transportRaw is Map<String, dynamic>) {
+      transportType = transportRaw['type'] as String?;
+      wsPath = transportRaw['path'] as String?;
+      grpcServiceName = transportRaw['service_name'] as String?;
+    }
     return VpnNode(
       id: id,
       name: name,
@@ -226,9 +257,9 @@ class VpnNode {
       pbk: json['pbk'] as String?,
       sid: json['sid'] as String?,
       flow: json['flow'] as String?,
-      transport: json['transport'] as String?,
-      wsPath: json['ws_path'] as String?,
-      grpcServiceName: json['grpc_service_name'] as String?,
+      transport: transportType,
+      wsPath: wsPath ?? json['ws_path'] as String?,
+      grpcServiceName: grpcServiceName ?? json['grpc_service_name'] as String?,
       tag: json['tag'] as String? ?? '$name-$id',
     );
   }

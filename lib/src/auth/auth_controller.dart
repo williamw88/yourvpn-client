@@ -52,7 +52,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     baseUrl: const String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'https://your-backend.example.com',
+      defaultValue: 'https://ziyoucloud.com',
     ),
     tokenProvider: _TokenStoreAdapter(store),
   );

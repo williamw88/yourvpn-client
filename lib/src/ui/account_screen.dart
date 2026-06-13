@@ -104,7 +104,7 @@ class _AccountBody extends StatelessWidget {
         Card(
           child: ListTile(
             leading: const Icon(Icons.account_circle_outlined, size: 40),
-            title: Text(user.u,
+            title: Text(user.displayName,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
             subtitle: Text('Plan: ${user.planName}'),

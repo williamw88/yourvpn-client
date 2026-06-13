@@ -1,0 +1,7 @@
+{
+  "api_base_url": "https://ziyoucloud.com",
+  "latest_version": "4.1.2",
+  "min_version": "4.1.2",
+  "update_url": "https://ziyoucloud.com/#/download",
+  "force_update": false
+}
