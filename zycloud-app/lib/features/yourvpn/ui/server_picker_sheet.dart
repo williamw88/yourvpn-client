@@ -127,7 +127,6 @@ class _ServerPickerSheetState extends ConsumerState<ServerPickerSheet> {
                               ...countryNodes.map((node) => _NodeTile(
                                 leading: const SizedBox(width: 22),
                                 title: node.name,
-                                subtitle: node.server,
                                 isSelected: selected?.id == node.id,
                                 onTap: () {
                                   ref.read(selectedNodeProvider.notifier).state = node;
@@ -167,7 +166,7 @@ class _NodeTile extends StatelessWidget {
   const _NodeTile({
     required this.leading,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.isSelected,
     required this.onTap,
     this.indent = 0,
@@ -175,7 +174,7 @@ class _NodeTile extends StatelessWidget {
 
   final Widget leading;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final bool isSelected;
   final VoidCallback onTap;
   final double indent;
@@ -193,7 +192,7 @@ class _NodeTile extends StatelessWidget {
           color: isSelected ? color.primary : null,
         ),
       ),
-      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      subtitle: subtitle == null ? null : Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
       trailing: isSelected ? Icon(Icons.check_circle_rounded, color: color.primary) : null,
       onTap: onTap,
     );
